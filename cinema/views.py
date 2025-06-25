@@ -1,18 +1,22 @@
 from datetime import datetime
 
 from django.db.models import F, Count
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets, mixins, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
-
+from rest_framework.viewsets import GenericViewSet
 from cinema.models import Genre, Actor, CinemaHall, Movie, MovieSession, Order
 from cinema.permissions import IsAdminOrIfAuthenticatedReadOnly
+from cinema.schemas import (
+    filter_movie_param,
+    filter_actors_param,
+    filter_genres_param,
+    filter_date_param,
+    filter_title_param)
 
 from cinema.serializers import (
     GenreSerializer,
@@ -130,26 +134,9 @@ class MovieViewSet(
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                "actors",
-                type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY,
-                description="Filter by actors id (ex. ?actors=1,2",
-            ),
-            OpenApiParameter(
-                "genres",
-                type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY,
-                description="Filter by genres id (ex. ?genres=1,2",
-            ),
-            OpenApiParameter(
-                "title",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.QUERY,
-                description="Filter by title`s name (case-insensitive, partial match)",
-            ),
-        ]
+        parameters=[filter_title_param,
+                    filter_genres_param,
+                    filter_actors_param]
     )
     def list(self, request, *args, **kwargs):
         """Return list of movies"""
@@ -196,21 +183,8 @@ class MovieSessionViewSet(viewsets.ModelViewSet):
         return MovieSessionSerializer
 
     @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                "date",
-                type=OpenApiTypes.DATE,
-                location=OpenApiParameter.QUERY,
-                description="Filter by date in YYYY-MM-DD format",
-            ),
-            OpenApiParameter(
-                "movie",
-                type=OpenApiTypes.INT,
-                location=OpenApiParameter.QUERY,
-                description="Filter by movies id (ex. ?movie=1,2",
-            ),
-        ]
-    )
+        parameters=[filter_date_param, filter_movie_param]
+        )
     def list(self, request, *args, **kwargs):
         """Return list of movies sessions"""
         return super().list(request, *args, **kwargs)

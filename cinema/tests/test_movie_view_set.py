@@ -110,6 +110,14 @@ class TestAuthenticatedMovieAPI(TestCase):
         res = self.client.post(BASE_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_throttling(self):
+        for k in range(30):
+            res = self.client.get(BASE_URL)
+            self.assertNotEqual(res.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        res = self.client.get(BASE_URL)
+        self.assertEqual(res.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+
 
 class TestAdminMovieAPI(TestCase):
     def setUp(self):
